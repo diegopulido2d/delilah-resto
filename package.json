@@ -1,0 +1,22 @@
+{
+  "name": "delilah-resto",
+  "version": "1.0.0",
+  "description": "Proyecto 3 - Acámica",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/diegopulido2d/delilah-resto.git"
+  },
+  "author": "Diego Pulido",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/diegopulido2d/delilah-resto/issues"
+  },
+  "homepage": "https://github.com/diegopulido2d/delilah-resto#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
