@@ -92,6 +92,19 @@ server.put('/decks/update/:id', (request,response) => {
 });
 
 
+/// DELETE
+server.delete('/decks/:id', (require, response) => {
+    const idParam = require.params.id;
+    let indiceEliminar;
+    decks.forEach((dck,index) => {
+        if (dck.id == idParam){
+            indiceEliminar = index;
+        }
+    });
+    const deckEliminado = decks.splice(indiceEliminar,1);
+    response.status(200);
+    response.json(deckEliminado);
+})
 
 
 // 5 LEVANTAR SERVIDOR
