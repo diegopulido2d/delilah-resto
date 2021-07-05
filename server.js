@@ -8,7 +8,6 @@ const md5 = require('md5');
 
 const sequelize = require('./connection.js');
 const jwt = require('jsonwebtoken');
-const { response } = require('express');
 const server = express();
 const jwtClave = process.env.JWT_KEY;
 var token;
@@ -18,7 +17,7 @@ var token;
 server.use(express.json());
 server.use(bodyParser.json());
 server.use(expressJwt({ secret: jwtClave, algorithms:['HS256']}).unless({
-    path: ['/login','/register']
+    path: ['/login','/register','/user']
 }));
 
 
@@ -49,7 +48,7 @@ server.get('/users', (request, response) => {
         response.json('No permitido.');
     }
 });
-//////// DISPLAY SPECIFIC USER DATA
+
 
 
 
@@ -57,9 +56,46 @@ server.get('/users', (request, response) => {
 
 
 /// CREATE
+//////// DISPLAY SPECIFIC USER DATA
+server.post('/user', (request, response) => {
+
+    const bodyParam = request.body;
+
+    const obj = jwt.verify(token, jwtClave);
+    const user_role = obj.role;
+
+    if(user_role){
+        sequelize.query("SELECT * from users WHERE (username = :_user OR email = :_user)", {
+            replacements : {
+                _user: bodyParam.user
+            }
+        })
+        .then( row => {
+            if(row[0] != ''){
+                response.status(200);
+                response.json(row[0]);
+            } else {
+                response.json('Datos Incorrectos.')
+            }
+        }).catch( error => {
+            response.status(400);
+            response.json("Error.");
+        }); 
+    } else {
+        response.status(400);
+        response.json('No permitido.');
+    }
+    
+});
 //////// NEW STOCK ITEM 
 server.post('/stock', (request, response) => {
     const bodyParam = request.body;
+
+    const obj = jwt.verify(token, jwtClave);
+    const user_role = obj.role;
+
+    if(user_role == 'admin'){
+
     sequelize.query("INSERT INTO stock (name, descr, price, quantity, pic, active) VALUES (:_name, :_descr, :_price, :_quantity, :_pic, :_active)", { 
         replacements : {
             _name: bodyParam.name,
@@ -76,9 +112,13 @@ server.post('/stock', (request, response) => {
     }).catch( error => {
         response.status(400);
         response.json("Error.");
-    }) 
+    }); 
+    } else {
+        response.status(400);
+        response.json('No permitido.');
+    }
 });
-//////// NEW USERS REGISTER
+//////// NEW USER REGISTER
 server.post('/register', (request, response) => {
     const bodyParam = request.body;
     sequelize.query("INSERT INTO users (username, email, password, number, address, role) VALUES (:_username, :_email, :_password, :_number, :_address, :_role)", { 
@@ -138,6 +178,12 @@ server.post('/login', (request, response) => {
 /// PUT
 server.put('/stock', (request, response) => {
     const bodyParam = request.body;
+
+    const obj = jwt.verify(token, jwtClave);
+    const user_role = obj.role;
+
+    if(user_role == 'admin'){
+
     sequelize.query("UPDATE stock SET name = :_name, descr = :_descr, price = :_price, quantity = :_quantity, pic = :_pic, active = :_active WHERE id = :_id", { 
         replacements : {
             _id: bodyParam.id,
@@ -155,7 +201,11 @@ server.put('/stock', (request, response) => {
     }).catch( error => {
         response.status(400);
         response.json("Error.");
-    }) 
+    }); 
+    } else {
+        response.status(400);
+        response.json('No permitido.');
+    } 
 });
 
 
@@ -163,6 +213,12 @@ server.put('/stock', (request, response) => {
 
 /// DELETE
 server.delete('/stock', (request, response) => {
+
+    const obj = jwt.verify(token, jwtClave);
+    const user_role = obj.role;
+
+    if(user_role == 'admin'){
+
     sequelize.query("DELETE from stock where id = :_id", { 
         replacements : {
             _id: request.body.id
@@ -174,7 +230,11 @@ server.delete('/stock', (request, response) => {
     }).catch( error => {
         response.status(400);
         response.json("Error.");
-    }) 
+    }); 
+    } else {
+        response.status(400);
+        response.json('No permitido.');
+    } 
 });
 
 
