@@ -1,113 +1,180 @@
-// 1 IMPORTAR LIBRERIAS
-const express = require('express');
+// 1 IMPORTAR
+require('dotenv').config();
 
-// 2 INSTANCIAR LIBRERIAS
+const express = require('express');
+const bodyParser = require('body-parser');
+const expressJwt = require('express-jwt');
+const md5 = require('md5');
+
+const sequelize = require('./connection.js');
+const jwt = require('jsonwebtoken');
+const { response } = require('express');
 const server = express();
+const jwtClave = process.env.JWT_KEY;
 
 // 3 MIDDLEWARES GLOBALES 
 server.use(express.json());
-
-
-// 4 DECLARAR CONSTANTES
-const decks = [
-    {
-        id: 1,
-        name: 'Anje Falkenrath',
-        color: 'Rakdos',
-        mech: 'Madness',
-        power: 8.5
-    },
-    {
-        id: 2,
-        name: 'Rielle the Everwise',
-        color: 'Izzet',
-        mech: 'Wheels',
-        power: 7.2
-    },
-    {
-        id: 3,
-        name: 'Yuriko, the Tigers Shadow',
-        color: 'Dimir',
-        mech: 'Ninjutsu',
-        power: 7.5
-    },
-    {
-        id: 4,
-        name: 'Teysa Karlov',
-        color: 'Orzhov',
-        mech: 'Aristocrats',
-        power: 7.0
-    }
-];
+server.use(bodyParser.json());
+server.use(expressJwt({ secret: jwtClave, algorithms:['HS256']}).unless({
+    path: ['/login','/register']
+}));
 
 
 
-// 5 DEFINIR ENDPOINTS
-/// GET
-server.get("/decks", (request, response) => {
-    response.status(200);
-    response.json(decks);
+/// READ
+//////// DISPLAY STOCK 
+server.get('/stock', (request, response) => {
+    sequelize.query("SELECT * from stock")
+    .then( rows => {
+        response.status(200);
+        response.json(rows[0]);
+    })
+});
+//////// DISPLAY USERS 
+server.get('/users', (request, response) => {
+    sequelize.query("SELECT * from users")
+    .then( rows => {
+        response.status(200);
+        response.json(rows[0]);
+    })
 });
 
-/// GET -> FILTER
-server.get("/decks/powerlevel/:powerLevel", (request, response) => {
-    const powerLevel = request.params.powerLevel;
-    const decksFiltrados = decks.filter(dck => {
-        return dck.power >= powerLevel
-    });
-    response.status(200);
-    response.json(decksFiltrados);
-});
 
-/// POST
-server.post('/decks', (request, response) =>{
+
+
+
+
+/// CREATE
+//////// NEW STOCK ITEM 
+server.post('/stock', (request, response) => {
     const bodyParam = request.body;
-    const nuevoDeck = {
-        id: decks.length + 1,
-        name: bodyParam.name,
-        color: bodyParam.color,
-        mech: bodyParam.mech,
-        power: bodyParam.power
-    };
-    decks.push(nuevoDeck);//Transacción a la base de datos
-    response.status(201);
-    response.json(decks);
-})
+    sequelize.query("INSERT INTO stock (name, descr, price, quantity, pic, active) VALUES (:_name, :_descr, :_price, :_quantity, :_pic, :_active)", { 
+        replacements : {
+            _name: bodyParam.name,
+            _descr: bodyParam.descr,
+            _price: bodyParam.price,
+            _quantity: bodyParam.quantity,
+            _pic: bodyParam.pic,
+            _active: bodyParam.active
+        }
+    })
+    .then( rows => {
+        response.status(201);
+        response.json("Dato ingresado.");
+    }).catch( error => {
+        response.status(400);
+        response.json("Error.");
+    }) 
+});
+//////// NEW USERS REGISTER
+server.post('/register', (request, response) => {
+    const bodyParam = request.body;
+    sequelize.query("INSERT INTO users (username, email, password, number, address) VALUES (:_username, :_email, :_password, :_number, :_address)", { 
+        replacements : {
+            _username: bodyParam.username,
+            _email: bodyParam.email,
+            _password: md5(bodyParam.password),
+            _number: bodyParam.number,
+            _address: bodyParam.address
+        }
+    })
+    .then( rows => {
+        response.status(201);
+        response.json("Dato ingresado.");
+    }).catch( error => {
+        response.status(400);
+        response.json("Error.");
+    }) 
+});
+//////// USER LOGIN
+server.post('/login', (request, response) => {
+    const bodyParam = request.body;
+    sequelize.query(`SELECT * from users WHERE (username = :_user AND password = :_password) OR (email = :_user AND password = :_password)`, { 
+        replacements : {
+            _user: bodyParam.user,
+            _password: md5(bodyParam.password)
+        }
+    })
+    .then( row => {
+        
+        if(row[0] != ''){
+            var token = jwt.sign({
+                username: row[0][0].username,
+                role: row[0][0].role
+            },jwtClave);
+            response.send(token);
+        } else {
+            response.json('Datos Incorrectos.')
+        }
+        
+
+    }).catch( error => {
+        response.status(400);
+        response.json("Error.");
+    }) 
+});
+
+
+
+
+
+
+
+
 
 /// PUT
-server.put('/decks/update/:id', (request,response) => {
-    const idParam = request.params.id;
-    const body = request.body;
-
-    decks.forEach(dck =>{
-        if (dck.id == idParam){
-            dck.name = body.name;
-            dck.color = body.color;
-            dck.mech = body.mech;
-            dck.power = body.power;
+server.put('/stock', (request, response) => {
+    const bodyParam = request.body;
+    sequelize.query("UPDATE stock SET name = :_name, descr = :_descr, price = :_price, quantity = :_quantity, pic = :_pic, active = :_active WHERE id = :_id", { 
+        replacements : {
+            _id: bodyParam.id,
+            _name: bodyParam.name,
+            _descr: bodyParam.descr,
+            _price: bodyParam.price,
+            _quantity: bodyParam.quantity,
+            _pic: bodyParam.pic,
+            _active: bodyParam.active
         }
-    });
-    response.status(201);
-    response.json(decks);
+    })
+    .then( rows => {
+        response.status(201);
+        response.json("Dato actualizado.");
+    }).catch( error => {
+        response.status(400);
+        response.json("Error.");
+    }) 
 });
+
+
 
 
 /// DELETE
-server.delete('/decks/:id', (require, response) => {
-    const idParam = require.params.id;
-    let indiceEliminar;
-    decks.forEach((dck,index) => {
-        if (dck.id == idParam){
-            indiceEliminar = index;
+server.delete('/stock', (request, response) => {
+    sequelize.query("DELETE from stock where id = :_id", { 
+        replacements : {
+            _id: request.body.id
         }
-    });
-    const deckEliminado = decks.splice(indiceEliminar,1);
-    response.status(200);
-    response.json(deckEliminado);
-})
+    })
+    .then( rows => {
+        response.status(200);
+        response.json("Dato eliminado.");
+    }).catch( error => {
+        response.status(400);
+        response.json("Error.");
+    }) 
+});
+
+
+
+
+
+
+
 
 
 // 5 LEVANTAR SERVIDOR
+// NPM RUN SERVER
 server.listen(3000, () => {
      console.log('Server escuchando en 3000');
 });
+
