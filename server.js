@@ -11,6 +11,8 @@ const jwt = require('jsonwebtoken');
 const { response } = require('express');
 const server = express();
 const jwtClave = process.env.JWT_KEY;
+var token;
+
 
 // 3 MIDDLEWARES GLOBALES 
 server.use(express.json());
@@ -30,14 +32,24 @@ server.get('/stock', (request, response) => {
         response.json(rows[0]);
     })
 });
-//////// DISPLAY USERS 
+//////// DISPLAY ALL USERS (ADMIN)
 server.get('/users', (request, response) => {
-    sequelize.query("SELECT * from users")
-    .then( rows => {
-        response.status(200);
-        response.json(rows[0]);
-    })
+
+    const obj = jwt.verify(token, jwtClave);
+    const user_role = obj.role;
+
+    if(user_role == 'admin'){
+        sequelize.query("SELECT * from users")
+        .then( rows => {
+            response.status(200);
+            response.json(rows[0]);
+        })
+    } else {
+        response.status(400);
+        response.json('No permitido.');
+    }
 });
+//////// DISPLAY SPECIFIC USER DATA
 
 
 
@@ -69,18 +81,19 @@ server.post('/stock', (request, response) => {
 //////// NEW USERS REGISTER
 server.post('/register', (request, response) => {
     const bodyParam = request.body;
-    sequelize.query("INSERT INTO users (username, email, password, number, address) VALUES (:_username, :_email, :_password, :_number, :_address)", { 
+    sequelize.query("INSERT INTO users (username, email, password, number, address, role) VALUES (:_username, :_email, :_password, :_number, :_address, :_role)", { 
         replacements : {
             _username: bodyParam.username,
             _email: bodyParam.email,
             _password: md5(bodyParam.password),
             _number: bodyParam.number,
-            _address: bodyParam.address
+            _address: bodyParam.address,
+            _role: bodyParam.role
         }
     })
     .then( rows => {
         response.status(201);
-        response.json("Dato ingresado.");
+        response.json("Usuario ingresado.");
     }).catch( error => {
         response.status(400);
         response.json("Error.");
@@ -98,7 +111,7 @@ server.post('/login', (request, response) => {
     .then( row => {
         
         if(row[0] != ''){
-            var token = jwt.sign({
+            token = jwt.sign({
                 username: row[0][0].username,
                 role: row[0][0].role
             },jwtClave);
