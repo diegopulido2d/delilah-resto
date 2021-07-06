@@ -1,7 +1,5 @@
 # delilah-resto
-Proyecto 3 - Acámica
+Proyecto 3 BACK END - Acámica
 
-// tener instalad mysql
-// prender apache: sudo apachectl start
-// descargar phpmyadmin 
-// root - root1234 phpmyadmin
+**Las carpetas contenidas en este repositorio contienen el proyecto desarrollado en su totalidad**
+*El presente archivo README y su correspondiente documentacion (.yml) se encuentran en elaboracion, y serán actualizados en los proximos días.*

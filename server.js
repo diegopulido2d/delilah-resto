@@ -60,7 +60,7 @@ server.get('/orders', (request, response) => {
 
     if(user_role == "admin"){
 
-    sequelize.query("SELECT orders.order_id, orders.status, orders.paymethod, orders.delivered, stock.name, stock.descr, stock.pic, stock.price, users.fullname, users.username, users.email, users.number, users.address FROM orders JOIN itemOrder ON orders.itemOrder_id = itemOrder.itemOrder_id JOIN stock ON itemOrder.stock_id = stock.stock_id JOIN users ON orders.user_id = users.user_id")
+    sequelize.query("SELECT orders.order_id, orders.status, orders.paymethod, orders.delivered, stock.name, stock.descr, stock.pic, stock.price, users.fullname, users.username, users.email, users.number, users.address FROM orders JOIN itemOrder ON orders.order_id = itemOrder.itemOrder_id JOIN stock ON itemOrder.stock_id = stock.stock_id JOIN users ON orders.user_id = users.user_id")
     .then( rows => {
         response.status(200);
         response.json(rows[0]);
@@ -73,10 +73,6 @@ server.get('/orders', (request, response) => {
         response.json('No permitido.');
     }
 });
-
-
-
-
 
 
 
@@ -101,7 +97,7 @@ server.post('/register', (request, response) => {
     })
     .then( rows => {
         response.status(201);
-        response.json("Usuario ingresado.");
+        response.json("Usuario registrado.");
     }).catch( error => {
         response.status(400);
         response.json("Error.");
@@ -185,7 +181,7 @@ server.post('/stock', (request, response) => {
     })
     .then( rows => {
         response.status(201);
-        response.json("Dato ingresado.");
+        response.json("Producto ingresado.");
     }).catch( error => {
         response.status(400);
         response.json("Error.");
@@ -203,7 +199,7 @@ server.post('/order', (request, response) => {
 
     if(user_role){
 
-    sequelize.query("SELECT orders.order_id, orders.status, orders.paymethod, orders.delivered, stock.name, stock.descr, stock.pic, stock.price, users.fullname, users.username, users.email, users.number, users.address FROM orders JOIN itemOrder ON orders.itemOrder_id = itemOrder.itemOrder_id JOIN stock ON itemOrder.stock_id = stock.stock_id JOIN users ON orders.user_id = users.user_id WHERE orders.order_id = :_orderId", { 
+    sequelize.query("SELECT orders.order_id, orders.status, orders.paymethod, orders.delivered, stock.name, stock.descr, stock.pic, stock.price, users.fullname, users.username, users.email, users.number, users.address FROM orders JOIN itemOrder ON orders.order_id = itemOrder.itemOrder_id JOIN stock ON itemOrder.stock_id = stock.stock_id JOIN users ON orders.user_id = users.user_id WHERE orders.order_id = :_orderId", { 
         replacements : {
             _orderId: bodyParam.orderId
         }
@@ -211,6 +207,43 @@ server.post('/order', (request, response) => {
     .then( rows => {
         response.status(200);
         response.json(rows[0]);
+    }).catch( error => {
+        response.status(400);
+        response.json("Error.");
+    }); 
+    } else {
+        response.status(400);
+        response.json('No permitido.');
+    }
+});
+//////// NEW ORDER ITEM (ALL)
+server.post('/neworder', (request, response) => {
+    const bodyParam = request.body;
+    const obj = jwt.verify(token, jwtClave);
+    var user_role = obj.role;
+
+    if(user_role){
+
+    sequelize.query("INSERT INTO orders (order_id, status, paymethod, delivered, user_id) VALUES (:_order_id, :_status, :_paymethod, :_delivered, :_user_id)", { 
+        replacements : {
+            _order_id: bodyParam.order_id,
+            _status: 'Orden recibida', 
+            _paymethod: bodyParam.paymethod, 
+            _delivered: 'No',
+            _user_id: bodyParam.user_id
+        }
+    })
+    .then( row => {
+        
+        sequelize.query("INSERT INTO itemOrder (itemOrder_id, stock_id) VALUES (:_itemOrder_id, :_stock_id)", { 
+            replacements : {
+                _itemOrder_id: bodyParam.order_id,
+                _stock_id: bodyParam.stock_id,
+            }
+        });
+        response.status(201);
+        response.json("Orden ingresada.");
+
     }).catch( error => {
         response.status(400);
         response.json("Error.");
@@ -230,7 +263,6 @@ server.post('/order', (request, response) => {
 //////// UPDATE STOCK ITEM (ADMIN)
 server.put('/stock', (request, response) => {
     const bodyParam = request.body;
-
     const obj = jwt.verify(token, jwtClave);
     var user_role = obj.role;
 
@@ -249,7 +281,7 @@ server.put('/stock', (request, response) => {
     })
     .then( rows => {
         response.status(201);
-        response.json("Dato actualizado.");
+        response.json("Producto actualizado.");
     }).catch( error => {
         response.status(400);
         response.json("Error.");
@@ -259,6 +291,46 @@ server.put('/stock', (request, response) => {
         response.json('No permitido.');
     } 
 });
+//////// UPDATE ORDER ITEM (ADMIN)
+server.put('/order', (request, response) => {
+    const bodyParam = request.body;
+    const obj = jwt.verify(token, jwtClave);
+    var user_role = obj.role;
+
+    if(user_role == 'admin'){
+
+    sequelize.query("UPDATE orders SET status = :_status, paymethod = :_paymethod, delivered = :_delivered, user_id = :_user_id WHERE order_id = :_order_id", { 
+        replacements : {
+            _order_id: bodyParam.order_id,
+            _status: 'Orden recibida', 
+            _paymethod: bodyParam.paymethod, 
+            _delivered: 'No',
+            _user_id: bodyParam.user_id
+        }
+    })
+    .then( row => {
+
+        sequelize.query("UPDATE itemOrder SET itemOrder_id = :_itemOrder_id, stock_id = :_stock_id WHERE itemOrder_id = :_itemOrder_id", { 
+            replacements : {
+                _itemOrder_id: bodyParam.order_id,
+                _stock_id: bodyParam.stock_id,
+            }
+        });
+        response.status(201);
+        response.json("Orden actualizada.");
+
+    }).catch( error => {
+        response.status(400);
+        response.json("Error.");
+    }); 
+    } else {
+        response.status(400);
+        response.json('No permitido.');
+    } 
+});
+
+
+
 
 
 
@@ -279,7 +351,7 @@ server.delete('/stock', (request, response) => {
     })
     .then( rows => {
         response.status(200);
-        response.json("Dato eliminado.");
+        response.json("Producto eliminado.");
     }).catch( error => {
         response.status(400);
         response.json("Error.");
