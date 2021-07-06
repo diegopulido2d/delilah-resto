@@ -22,8 +22,11 @@ server.use(expressJwt({ secret: jwtClave, algorithms:['HS256']}).unless({
 
 
 
-/// READ
-//////// DISPLAY STOCK 
+
+
+
+/// GET
+//////// DISPLAY STOCK (ALL)
 server.get('/stock', (request, response) => {
     sequelize.query("SELECT * from stock")
     .then( rows => {
@@ -35,7 +38,7 @@ server.get('/stock', (request, response) => {
 server.get('/users', (request, response) => {
 
     const obj = jwt.verify(token, jwtClave);
-    const user_role = obj.role;
+    var user_role = obj.role;
 
     if(user_role == 'admin'){
         sequelize.query("SELECT * from users")
@@ -48,21 +51,41 @@ server.get('/users', (request, response) => {
         response.json('No permitido.');
     }
 });
+//////// GET ORDERS (ADMIN)
+server.get('/orders', (request, response) => {
+
+    const obj = jwt.verify(token, jwtClave);
+    var user_role = obj.role;
+
+    if(user_role = "admin"){
+
+    sequelize.query("SELECT orders.order_id, orders.status, orders.paymethod, orders.delivered, stock.name, stock.descr, stock.pic, stock.price, users.fullname, users.username, users.email, users.number, users.address FROM orders JOIN itemOrder ON orders.itemOrder_id = itemOrder.itemOrder_id JOIN stock ON itemOrder.stock_id = stock.stock_id JOIN users ON orders.user_id = users.user_id")
+    .then( rows => {
+        response.status(200);
+        response.json(rows[0]);
+    }).catch( error => {
+        response.status(400);
+        response.json("Error.");
+    }); 
+    } else {
+        response.status(400);
+        response.json('No permitido.');
+    }
+});
 
 
 
 
 
 
-
-/// CREATE
+/// POST
 //////// DISPLAY SPECIFIC USER DATA
 server.post('/user', (request, response) => {
 
     const bodyParam = request.body;
 
     const obj = jwt.verify(token, jwtClave);
-    const user_role = obj.role;
+    var user_role = obj.role;
 
     if(user_role){
         sequelize.query("SELECT * from users WHERE (username = :_user OR email = :_user)", {
@@ -87,12 +110,12 @@ server.post('/user', (request, response) => {
     }
     
 });
-//////// NEW STOCK ITEM 
+//////// NEW STOCK ITEM (ADMIN)
 server.post('/stock', (request, response) => {
     const bodyParam = request.body;
 
     const obj = jwt.verify(token, jwtClave);
-    const user_role = obj.role;
+    var user_role = obj.role;
 
     if(user_role == 'admin'){
 
@@ -118,12 +141,13 @@ server.post('/stock', (request, response) => {
         response.json('No permitido.');
     }
 });
-//////// NEW USER REGISTER
+//////// NEW USER REGISTRATION
 server.post('/register', (request, response) => {
     const bodyParam = request.body;
-    sequelize.query("INSERT INTO users (username, email, password, number, address, role) VALUES (:_username, :_email, :_password, :_number, :_address, :_role)", { 
+    sequelize.query("INSERT INTO users (username, fullname, email, password, number, address, role) VALUES (:_username, :_fullname, :_email, :_password, :_number, :_address, :_role)", { 
         replacements : {
             _username: bodyParam.username,
+            _fullname: bodyParam.fullname,
             _email: bodyParam.email,
             _password: md5(bodyParam.password),
             _number: bodyParam.number,
@@ -159,9 +183,8 @@ server.post('/login', (request, response) => {
         } else {
             response.json('Datos Incorrectos.')
         }
-        
-
-    }).catch( error => {
+    })
+    .catch( error => {
         response.status(400);
         response.json("Error.");
     }) 
@@ -175,16 +198,18 @@ server.post('/login', (request, response) => {
 
 
 
+
 /// PUT
+//////// UPDATE ITEM
 server.put('/stock', (request, response) => {
     const bodyParam = request.body;
 
     const obj = jwt.verify(token, jwtClave);
-    const user_role = obj.role;
+    var user_role = obj.role;
 
     if(user_role == 'admin'){
 
-    sequelize.query("UPDATE stock SET name = :_name, descr = :_descr, price = :_price, quantity = :_quantity, pic = :_pic, active = :_active WHERE id = :_id", { 
+    sequelize.query("UPDATE stock SET name = :_name, descr = :_descr, price = :_price, quantity = :_quantity, pic = :_pic, active = :_active WHERE stock_id = :_id", { 
         replacements : {
             _id: bodyParam.id,
             _name: bodyParam.name,
@@ -212,14 +237,15 @@ server.put('/stock', (request, response) => {
 
 
 /// DELETE
+//////// DELETE ITEM
 server.delete('/stock', (request, response) => {
 
     const obj = jwt.verify(token, jwtClave);
-    const user_role = obj.role;
+    var user_role = obj.role;
 
     if(user_role == 'admin'){
 
-    sequelize.query("DELETE from stock where id = :_id", { 
+    sequelize.query("DELETE from stock where stock_id = :_id", { 
         replacements : {
             _id: request.body.id
         }
