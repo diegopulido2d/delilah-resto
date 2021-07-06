@@ -1,19 +1,20 @@
-// 1 IMPORTAR
+// IMPORTAR
 require('dotenv').config();
 
 const express = require('express');
 const bodyParser = require('body-parser');
 const expressJwt = require('express-jwt');
 const md5 = require('md5');
-
 const sequelize = require('./connection.js');
 const jwt = require('jsonwebtoken');
+
+// INSTANCIAR Y DECLARAR
 const server = express();
 const jwtClave = process.env.JWT_KEY;
 var token;
 
 
-// 3 MIDDLEWARES GLOBALES 
+// MIDDLEWARES GLOBALES 
 server.use(express.json());
 server.use(bodyParser.json());
 server.use(expressJwt({ secret: jwtClave, algorithms:['HS256']}).unless({
@@ -25,15 +26,7 @@ server.use(expressJwt({ secret: jwtClave, algorithms:['HS256']}).unless({
 
 
 
-/// GET
-//////// DISPLAY STOCK (ALL)
-server.get('/stock', (request, response) => {
-    sequelize.query("SELECT * from stock")
-    .then( rows => {
-        response.status(200);
-        response.json(rows[0]);
-    })
-});
+/// OPERACIONES GET
 //////// DISPLAY ALL USERS (ADMIN)
 server.get('/users', (request, response) => {
 
@@ -51,13 +44,21 @@ server.get('/users', (request, response) => {
         response.json('No permitido.');
     }
 });
-//////// GET ORDERS (ADMIN)
+//////// DISPLAY ALL STOCK ITEMS (ALL)
+server.get('/stock', (request, response) => {
+    sequelize.query("SELECT * from stock")
+    .then( rows => {
+        response.status(200);
+        response.json(rows[0]);
+    })
+});
+//////// DISPLAY ALL ORDERS (ADMIN)
 server.get('/orders', (request, response) => {
 
     const obj = jwt.verify(token, jwtClave);
     var user_role = obj.role;
 
-    if(user_role = "admin"){
+    if(user_role == "admin"){
 
     sequelize.query("SELECT orders.order_id, orders.status, orders.paymethod, orders.delivered, stock.name, stock.descr, stock.pic, stock.price, users.fullname, users.username, users.email, users.number, users.address FROM orders JOIN itemOrder ON orders.itemOrder_id = itemOrder.itemOrder_id JOIN stock ON itemOrder.stock_id = stock.stock_id JOIN users ON orders.user_id = users.user_id")
     .then( rows => {
@@ -78,8 +79,56 @@ server.get('/orders', (request, response) => {
 
 
 
-/// POST
-//////// DISPLAY SPECIFIC USER DATA
+/// OPERACIONES POST
+//////// NEW USER REGISTRATION (ALL)
+server.post('/register', (request, response) => {
+    const bodyParam = request.body;
+    sequelize.query("INSERT INTO users (username, fullname, email, password, number, address, role) VALUES (:_username, :_fullname, :_email, :_password, :_number, :_address, :_role)", { 
+        replacements : {
+            _username: bodyParam.username,
+            _fullname: bodyParam.fullname,
+            _email: bodyParam.email,
+            _password: md5(bodyParam.password),
+            _number: bodyParam.number,
+            _address: bodyParam.address,
+            _role: bodyParam.role
+        }
+    })
+    .then( rows => {
+        response.status(201);
+        response.json("Usuario ingresado.");
+    }).catch( error => {
+        response.status(400);
+        response.json("Error.");
+    }) 
+});
+//////// USER LOGIN (ALL)
+server.post('/login', (request, response) => {
+    const bodyParam = request.body;
+    sequelize.query(`SELECT * from users WHERE (username = :_user AND password = :_password) OR (email = :_user AND password = :_password)`, { 
+        replacements : {
+            _user: bodyParam.user,
+            _password: md5(bodyParam.password)
+        }
+    })
+    .then( row => {
+        
+        if(row[0] != ''){
+            token = jwt.sign({
+                username: row[0][0].username,
+                role: row[0][0].role
+            },jwtClave);
+            response.send(token);
+        } else {
+            response.json('Datos Incorrectos.')
+        }
+    })
+    .catch( error => {
+        response.status(400);
+        response.json("Error.");
+    }) 
+});
+//////// DISPLAY SPECIFIC USER DATA (ADMIN)
 server.post('/user', (request, response) => {
 
     const bodyParam = request.body;
@@ -87,7 +136,7 @@ server.post('/user', (request, response) => {
     const obj = jwt.verify(token, jwtClave);
     var user_role = obj.role;
 
-    if(user_role){
+    if(user_role == "admin"){
         sequelize.query("SELECT * from users WHERE (username = :_user OR email = :_user)", {
             replacements : {
                 _user: bodyParam.user
@@ -141,66 +190,14 @@ server.post('/stock', (request, response) => {
         response.json('No permitido.');
     }
 });
-//////// NEW USER REGISTRATION
-server.post('/register', (request, response) => {
-    const bodyParam = request.body;
-    sequelize.query("INSERT INTO users (username, fullname, email, password, number, address, role) VALUES (:_username, :_fullname, :_email, :_password, :_number, :_address, :_role)", { 
-        replacements : {
-            _username: bodyParam.username,
-            _fullname: bodyParam.fullname,
-            _email: bodyParam.email,
-            _password: md5(bodyParam.password),
-            _number: bodyParam.number,
-            _address: bodyParam.address,
-            _role: bodyParam.role
-        }
-    })
-    .then( rows => {
-        response.status(201);
-        response.json("Usuario ingresado.");
-    }).catch( error => {
-        response.status(400);
-        response.json("Error.");
-    }) 
-});
-//////// USER LOGIN
-server.post('/login', (request, response) => {
-    const bodyParam = request.body;
-    sequelize.query(`SELECT * from users WHERE (username = :_user AND password = :_password) OR (email = :_user AND password = :_password)`, { 
-        replacements : {
-            _user: bodyParam.user,
-            _password: md5(bodyParam.password)
-        }
-    })
-    .then( row => {
-        
-        if(row[0] != ''){
-            token = jwt.sign({
-                username: row[0][0].username,
-                role: row[0][0].role
-            },jwtClave);
-            response.send(token);
-        } else {
-            response.json('Datos Incorrectos.')
-        }
-    })
-    .catch( error => {
-        response.status(400);
-        response.json("Error.");
-    }) 
-});
 
 
 
 
 
 
-
-
-
-
-/// PUT
-//////// UPDATE ITEM
+/// OPERACIONES PUT
+//////// UPDATE STOCK ITEM (ADMIN)
 server.put('/stock', (request, response) => {
     const bodyParam = request.body;
 
@@ -236,8 +233,8 @@ server.put('/stock', (request, response) => {
 
 
 
-/// DELETE
-//////// DELETE ITEM
+/// OPERACIONES DELETE
+//////// DELETE STOCK ITEM (ADMIN)
 server.delete('/stock', (request, response) => {
 
     const obj = jwt.verify(token, jwtClave);
@@ -266,13 +263,8 @@ server.delete('/stock', (request, response) => {
 
 
 
-
-
-
-
-
-// 5 LEVANTAR SERVIDOR
-// NPM RUN SERVER
+// LEVANTAR SERVIDOR
+// NODE SERVER
 server.listen(3000, () => {
      console.log('Server escuchando en 3000');
 });
