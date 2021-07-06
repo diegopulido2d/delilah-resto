@@ -18,7 +18,7 @@ var token;
 server.use(express.json());
 server.use(bodyParser.json());
 server.use(expressJwt({ secret: jwtClave, algorithms:['HS256']}).unless({
-    path: ['/login','/register','/user']
+    path: ['/login','/register']
 }));
 
 
@@ -73,6 +73,11 @@ server.get('/orders', (request, response) => {
         response.json('No permitido.');
     }
 });
+
+
+
+
+
 
 
 
@@ -181,6 +186,31 @@ server.post('/stock', (request, response) => {
     .then( rows => {
         response.status(201);
         response.json("Dato ingresado.");
+    }).catch( error => {
+        response.status(400);
+        response.json("Error.");
+    }); 
+    } else {
+        response.status(400);
+        response.json('No permitido.');
+    }
+});
+//////// DISPLAY SPECIFIC ORDER ITEM (ADMIN)
+server.post('/order', (request, response) => {
+    const bodyParam = request.body;
+    const obj = jwt.verify(token, jwtClave);
+    var user_role = obj.role;
+
+    if(user_role){
+
+    sequelize.query("SELECT orders.order_id, orders.status, orders.paymethod, orders.delivered, stock.name, stock.descr, stock.pic, stock.price, users.fullname, users.username, users.email, users.number, users.address FROM orders JOIN itemOrder ON orders.itemOrder_id = itemOrder.itemOrder_id JOIN stock ON itemOrder.stock_id = stock.stock_id JOIN users ON orders.user_id = users.user_id WHERE orders.order_id = :_orderId", { 
+        replacements : {
+            _orderId: bodyParam.orderId
+        }
+    })
+    .then( rows => {
+        response.status(200);
+        response.json(rows[0]);
     }).catch( error => {
         response.status(400);
         response.json("Error.");
