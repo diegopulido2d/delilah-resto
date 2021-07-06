@@ -302,9 +302,9 @@ server.put('/order', (request, response) => {
     sequelize.query("UPDATE orders SET status = :_status, paymethod = :_paymethod, delivered = :_delivered, user_id = :_user_id WHERE order_id = :_order_id", { 
         replacements : {
             _order_id: bodyParam.order_id,
-            _status: 'Orden recibida', 
+            _status: bodyParam.status, 
             _paymethod: bodyParam.paymethod, 
-            _delivered: 'No',
+            _delivered: bodyParam.delivered,
             _user_id: bodyParam.user_id
         }
     })
