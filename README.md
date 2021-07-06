@@ -1,4 +1,4 @@
-# delilah-resto
+# Delilah-Resto
 Proyecto 3 BACK END - Acámica
 
 **Las carpetas contenidas en este repositorio contienen el proyecto desarrollado en su totalidad**
