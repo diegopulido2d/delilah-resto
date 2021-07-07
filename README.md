@@ -5,12 +5,16 @@ Proyecto 3 BACK END - Acámica
 *The folders stored into this repository contain the fully developed project*
 
 
+
+
 **Set-Up and Installation**
 
 1. Download the source code or clone repository using git.
 2. Open a command line terminal or bash into the 'delilah-resto' folder.
 3. Make sure you've got NodeJS and NPM installed in your system.
 4. Run 'npm init' in order to install the base packages.
+
+
 
 
 **Preparing the Database**
@@ -32,6 +36,8 @@ USERNAME: charlygarcia
 PASS: zxczxczxc
 
 
+
+
 **Running the API REST server locally**
 
 1. Once your localhost is running with the database, and all the required packages are installed into the node modules, you can run the API service locally. To do so, enter 'node server' command.
@@ -42,6 +48,8 @@ PASS: zxczxczxc
     Connection to database succesful!
 
 2. Now the API service should be connected to the database, and running succesfully!
+
+
 
 
 
