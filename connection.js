@@ -5,7 +5,7 @@ const sequelize = new Sequelize(path, {logging: false});
 
 
 sequelize.authenticate().then(() => {
-    console.log('Conectado a la BD!');
+    console.log('Connection to database succesful!');
 }).catch(err => {
     console.error('Error', err);
 });

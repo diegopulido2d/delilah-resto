@@ -368,6 +368,6 @@ server.delete('/stock', (request, response) => {
 // LEVANTAR SERVIDOR
 // NODE SERVER
 server.listen(3000, () => {
-     console.log('Server escuchando en 3000');
+     console.log('Localhost listening on port 3000!');
 });
 
