@@ -4,7 +4,7 @@ Proyecto 3 BACK END - Acámica
 *Las carpetas alojadas en este repositorio contienen el proyecto desarrollado en su totalidad.*<br />
 *The folders stored into this repository contain the fully developed project*
 
-<br /><br /><br />
+<br /><br />
 
 
 **Set-Up and Installation**
@@ -15,7 +15,7 @@ Proyecto 3 BACK END - Acámica
 4. Run 'npm init' in order to install the base packages.
 
 
-<br /><br /><br />
+<br /><br />
 
 **Preparing the Database**
 
@@ -36,7 +36,7 @@ USERNAME: charlygarcia
 PASS: zxczxczxc
 
 
-<br /><br /><br />
+<br /><br />
 
 **Running the API REST server locally**
 
