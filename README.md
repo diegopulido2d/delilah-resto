@@ -15,7 +15,7 @@ Proyecto 3 BACK END - Acámica
 4. Run 'npm init' in order to install the base packages.
 
 
-<br /><br />
+<br />
 
 **Preparing the Database**
 
@@ -36,7 +36,7 @@ USERNAME: charlygarcia
 PASS: zxczxczxc
 
 
-<br /><br />
+<br />
 
 **Running the API REST server locally**
 
