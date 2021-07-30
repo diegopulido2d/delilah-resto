@@ -361,6 +361,37 @@ server.delete('/stock', (request, response) => {
         response.json('No permitido.');
     } 
 });
+//////// DELETE ORDER (ADMIN)
+server.delete('/order', (request, response) => {
+
+    const obj = jwt.verify(token, jwtClave);
+    var user_role = obj.role;
+
+    if(user_role == 'admin'){
+
+    sequelize.query("DELETE from orders where order_id = :_id", { 
+        replacements : {
+            _id: request.body.id
+        }
+    })
+    .then( rows => {
+        sequelize.query("DELETE from itemOrder where itemOrder_id = :_id", { 
+            replacements : {
+                _id: request.body.id
+            }
+        });
+        response.status(200);
+        response.json("Producto eliminado.");
+    }).catch( error => {
+        response.status(400);
+        response.json("Error.");
+    }); 
+    } else {
+        response.status(400);
+        response.json('No permitido.');
+    } 
+});
+
 
 
 
