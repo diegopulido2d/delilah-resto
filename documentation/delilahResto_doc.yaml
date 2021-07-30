@@ -1,0 +1,392 @@
+swagger: "2.0"
+info:
+  description: "*By: Diego F. Pulido*<br><br>**Hello, and welcome to the Delilah-Resto API service.**<br><br>This file will guide you through the different actions available for the Delilah-Resto delivery app. Below, you will find a detailed list of endpoints ready to use for each user-role"
+  version: "1.0.0"
+  title: "Delilah-Resto"
+tags:
+- name: "everyone"
+  description: "The following actions are available for everyone."
+- name: "customer"
+  description: "The following actions are available for registered users (both admin and customers)."
+- name: "admin"
+  description: "The following actions are available for registered admins only."
+paths:
+  /register:
+    post:
+      tags:
+      - "everyone"
+      summary: "Create a new user."
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "This is the object that should contain all the account data for the new user."
+        required: true
+        schema:
+          $ref: "#/definitions/Register"
+      responses:
+        "201":
+          description: "Usuario registrado."
+        "405":
+          description: "Error."
+  /login:
+    post:
+      tags:
+      - "everyone"
+      summary: "Log into a an existing user's account."
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "This is the object that should contain the login credentials for an existing user."
+        required: true
+        schema:
+          $ref: "#/definitions/Login"
+      responses:
+        "201":
+          description: "Usuario registrado."
+        "400":
+          description: "Error."
+          
+  /stock:
+    get:
+      tags:
+      - "customer"
+      summary: "Get all the available products in stock."
+      description: ""
+      produces:
+      - "application/json"
+      responses:
+        "200":
+          description: "Returns the object containing the whole list of available products."
+        "400":
+          description: "Error."
+    post:
+      tags:
+      - "admin"
+      summary: "Creates a new product in stock."
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "This is the object that should contain the data of the new product."
+        required: true
+        schema:
+          $ref: "#/definitions/StockPost"
+      responses:
+        "201":
+          description: "Returns a success message."
+        "400":
+          description: "Error."
+    put:
+      tags:
+      - "admin"
+      summary: "Updates a product in stock."
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "This is the object that should contain the data of the updated product."
+        required: true
+        schema:
+          $ref: "#/definitions/StockPut"
+      responses:
+        "201":
+          description: "Returns a success message."
+        "400":
+          description: "Error."
+    delete:
+      tags:
+      - "admin"
+      summary: "Deletes a product from stock."
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "This is the object that contains the ID of the product that is going to be deleted."
+        required: true
+        schema:
+          $ref: "#/definitions/StockDelete"
+      responses:
+        "200":
+          description: "Returns a success message."
+        "400":
+          description: "Error."
+  /orders:
+    get:
+      tags:
+      - "admin"
+      summary: "Get the list of all orders."
+      description: ""
+      produces:
+      - "application/json"
+      responses:
+        "200":
+          description: "Returns the object containing the whole list of orders."
+        "400":
+          description: "Error."
+  /order:
+    post:
+      tags:
+      - "customer"
+      summary: "Get all the products in an order."
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "This is the object that should contain the ID number of the requested order."
+        required: true
+        schema:
+          $ref: "#/definitions/OrderPost"
+      responses:
+        "200":
+          description: "Returns the object containing the whole list of products within an order."
+        "400":
+          description: "Error."
+    put:
+      tags:
+      - "admin"
+      summary: "Updates an order."
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "This is the object that should contain the data of the updated order."
+        required: true
+        schema:
+          $ref: "#/definitions/OrderPut"
+      responses:
+        "201":
+          description: "Returns a success message."
+        "400":
+          description: "Error."
+    delete:
+      tags:
+      - "admin"
+      summary: "Deletes an order."
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "This is the object that should contain the ID of the order that is being deleted."
+        required: true
+        schema:
+          $ref: "#/definitions/OrderDelete"
+      responses:
+        "201":
+          description: "Returns a success message."
+        "400":
+          description: "Error."
+  /neworder:
+    post:
+      tags:
+      - "customer"
+      summary: "Place an order for one or more items."
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "This is the object that should contain the data of the placed order."
+        required: true
+        schema:
+          $ref: "#/definitions/NewOrder"
+      responses:
+        "201":
+          description: "Places an order into the restaurant's database."
+        "400":
+          description: "Error."
+  /users:
+    get:
+      tags:
+      - "admin"
+      summary: "Get the list of all users."
+      description: ""
+      produces:
+      - "application/json"
+      responses:
+        "200":
+          description: "Returns the object containing the whole list of users."
+        "400":
+          description: "Error."
+  /user:
+    post:
+      tags:
+      - "admin"
+      summary: "Get a specific user."
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "This is the object that should contain the username or email of the requested user."
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        "200":
+          description: "Returns the object containing the requested user."
+        "400":
+          description: "Error."
+definitions:
+  OrderPost:
+    type: "object"
+    properties:
+      orderId:
+        type: "integer"
+        format: "int64"
+        example: "3"
+  OrderPut:
+    type: "object"
+    properties:
+      order_id:
+        type: "integer"
+        format: "int64"
+        example: "3"
+      status:
+        type: "string"
+        example: "En preparación"
+      paymethod:
+        type: "string"
+        example: "Bono"
+      delivered:
+        type: "string"
+        example: "No"
+      user_id:
+        type: "integer"
+        example: 3
+      stock_id:
+        type: "integer"
+        example: 1
+  OrderDelete:
+    type: "object"
+    properties:
+      orderId:
+        type: "integer"
+        format: "int64"
+        example: "1"
+  NewOrder:
+    type: "object"
+    properties:
+      order_id:
+        type: "integer"
+        format: "int64"
+        example: "5"
+      paymethod:
+        type: "string"
+        example: "Efectivo"
+      user_id:
+        type: "integer"
+        example: 3
+      stock_id:
+        type: "integer"
+        example: 1
+  User:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        example: "charlygarcia"
+  Register:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        example: "gustavocerati"
+      fullname:
+        type: "string"
+        example: "Gustavo Cerati"
+      email:
+        type: "string"
+        example: "gustavocerati@gmail.com"
+      password:
+        type: "string"
+        example: "vwe45f544g155"
+      number:
+        type: "string"
+        example: "123456"
+      address:
+        type: "string"
+        example: "Calle 5ta # 43 - 67"
+  StockPost:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        example: "Burrito de Falafel"
+      descr:
+        type: "string"
+        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua..."
+      price:
+        type: "integer"
+        example: 19900
+      quantity:
+        type: "integer"
+        example: 40
+      pic:
+        type: "string"
+        example: "/pictures/burrito.png"
+      active:
+        type: "integer"
+        example: 1
+  StockPut:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        example: 3
+      name:
+        type: "string"
+        example: "Burrito de Frijol"
+      descr:
+        type: "string"
+        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua..."
+      price:
+        type: "integer"
+        example: 24900
+      quantity:
+        type: "integer"
+        example: 30
+      pic:
+        type: "string"
+        example: "/pictures/burrito.png"
+      active:
+        type: "integer"
+        example: 0
+  StockDelete:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        example: 3
+  Login:
+    type: "object"
+    properties:
+      username:
+        type: "string"
+        example: "gustavocerati"
+      password:
+        type: "string"
+        example: "vwe45f544g155"
